@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "./App.css";
 
 function App() {
@@ -443,6 +443,10 @@ print(x)`;
     title('Butterworth Low Pass Filtered Image');
     end
     `;
+
+  useEffect(() => {
+    copyCodeToClipboard(matLab);
+  }, []);
   const copyCodeToClipboard = (code) => {
     navigator.clipboard
       .writeText(code)
@@ -454,9 +458,12 @@ print(x)`;
       });
   };
 
-  return (
-    <div className="App">
-      <button onClick={() => copyCodeToClipboard(graphColoring)}>
+  return <div className="App"></div>;
+}
+
+export default App;
+{
+  /* <button onClick={() => copyCodeToClipboard(graphColoring)}>
         Graph Coloring
       </button>
       <button onClick={() => copyCodeToClipboard(xor)}>Xor </button>
@@ -464,9 +471,5 @@ print(x)`;
       <button onClick={() => copyCodeToClipboard(dfs)}>DFS </button>
       <button onClick={() => copyCodeToClipboard(water)}>Water</button>
       <button onClick={() => copyCodeToClipboard(token)}>Token</button>
-      <button onClick={() => copyCodeToClipboard(matLab)}>MAT LAB</button>
-    </div>
-  );
+      <button onClick={() => copyCodeToClipboard(matLab)}>MAT LAB</button> */
 }
-
-export default App;
