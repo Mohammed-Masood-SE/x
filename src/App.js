@@ -458,7 +458,11 @@ print(x)`;
       });
   };
 
-  return <div className="App"></div>;
+  return (
+    <div className="App">
+      <button onClick={() => copyCodeToClipboard(matLab)}>MAT LAB</button>
+    </div>
+  );
 }
 
 export default App;
