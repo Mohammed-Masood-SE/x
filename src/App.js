@@ -235,61 +235,41 @@ graphColor(0)
 print(x)`;
 
   const aStart = `
-import numpy as np
-import time
-
-def best_solution(state):
-    return np.array([s['puzzle'] for s in state]).reshape(-1, 3, 3)
-
-def misplaced_tiles(puzzle, goal):
-    return np.sum(puzzle != goal) - 1
-
-def coordinates(puzzle):
-    pos = np.array(range(9))
-    for p, q in enumerate(puzzle): pos[q] = p
-    return pos
-
-def evaluate_misplaced(puzzle, goal):
-    steps = [('up', [0, 1, 2], -3), ('down', [6, 7, 8], 3), ('left', [0, 3, 6], -1), ('right', [2, 5, 8], 1)]
-    dt_state, dt_priority = [('puzzle', list), ('parent', int), ('gn', int), ('hn', int)], [('position', int), ('fn', int)]
-    cost_g, parent, gn, hn = coordinates(goal), -1, 0, misplaced_tiles(coordinates(puzzle), coordinates(goal))
-    state, priority = np.array([(puzzle, parent, gn, hn)], dt_state), np.array([(0, hn)], dt_priority)
-
-    while True:
-        priority = np.sort(priority, kind='mergesort', order=['fn', 'position'])
-        position, fn = priority[0]
-        priority = np.delete(priority, 0, 0)
-        puzzle, parent, gn, hn = state[position]
-        puzzle = np.array(puzzle)
-        blank = int(np.where(puzzle == 0)[0])
-        gn += 1
-        c, start_time = 1, time.time()
-
-        for move, positions, head in steps:
-            c += 1
-            if blank not in positions:
-                open_states = puzzle.copy()
-                open_states[blank], open_states[blank + head] = open_states[blank + head], open_states[blank]
-
-                if not (np.all(list(state['puzzle']) == open_states, 1)).any():
-                    end_time = time.time()
-                    if end_time - start_time > 2: print("The 8 puzzle is unsolvable\n"); break
-                    hn = misplaced_tiles(coordinates(open_states), cost_g)
-                    q = np.array([(open_states, position, gn, hn)], dt_state)
-                    state = np.append(state, q, 0)
-                    fn = gn + hn
-                    q = np.array([(len(state) - 1, fn)], dt_priority)
-                    priority = np.append(priority, q, 0)
-                    if np.array_equal(open_states, goal): print('The 8 puzzle is solvable\n'); return state, len(priority)
-
-    return state, len(priority)
-
-puzzle, goal = [2, 8, 3, 1, 6, 4, 7, 0, 5], [1, 2, 3, 8, 0, 4, 7, 6, 5]
-state, visited = evaluate_misplaced(puzzle, goal)
-best_path = best_solution(state)
-print(str(best_path).replace('[', ' ').replace(']', ''))
-total_moves, visited_nodes = len(best_path) - 1, len(state) - visited
-print('\nSteps to reach goal:', total_moves, '\nTotal nodes visited:', visited_nodes)
+  import networkx as nx
+  import matplotlib.pyplot as plt
+  
+  def find_shortest_path(grid_data, start, end):
+      rows, cols = len(grid_data), len(grid_data[0])
+      G = nx.grid_2d_graph(rows, cols)
+      for r in range(rows):
+          for c in range(cols):
+              if grid_data[r][c] == 1:
+                  G.remove_node((r, c))
+  
+      try:
+          path = nx.shortest_path(G, source=start, target=end)
+          return path
+      except nx.NetworkXNoPath:
+          return None
+  
+  grid_data = [
+      [0, 0, 0, 1, 0],
+      [0, 1, 0, 1, 0],
+      [0, 1, 0, 0, 0],
+      [0, 0, 0, 0, 0],
+      [0, 1, 0, 0, 0]
+  ]
+  
+  start_position = (0, 0)
+  end_position = (4, 4)
+  
+  path = find_shortest_path(grid_data, start_position, end_position)
+  
+  if path:
+      print("Shortest Path:", path)
+  else:
+      print("No path found.")
+  
 `;
 
   const twoPlayer = `
