@@ -121,64 +121,31 @@ print(tree.findPossibility(State(2, 3),4,3))
 
   `;
   const dfs = `
-  class Node:
-    def __init__(self,value):
-        self.value = value
-        self.left = None
-        self.right = None
+  class Graph:
+  def __init__(self):
+      self.adjList = {}
+  
+  def insert(self,fromNode,toNode):
+      if fromNode not in self.adjList:
+          self.adjList[fromNode] = []
+      self.adjList[fromNode].append(toNode)
+  
+  def dfs(self,node,visited=None):
+      if visited == None:
+          visited = set()
+      print(node)
+      visited.add(node)
+      for neighbor in self.adjList.get(node,[]):
+          if neighbor not in visited:
+              self.dfs(neighbor,visited)
 
-class Tree:
-    def __init__(self):
-        self.head = None
-
-    def insert(self,value):
-        newNode = Node(value)
-        if self.head == None:
-            self.head = newNode
-            return
-        current = self.head
-        while current:
-            if value < current.value:
-                if current.left == None:
-                    current.left = newNode
-                    return
-                current = current.left
-            else:
-                if current.right == None:
-                    current.right = newNode
-                    return
-                current = current.right
-    
-    def DFS_InOrder(self):
-        data = []
-        current = self.head
-        def traverse(node):
-            
-            if node.left:
-                traverse(node.left)
-            if node.right:
-                traverse(node.right)
-            
-        traverse(current)
-        return data
-
-            
-
-        
-
-
-#   10
-#  5   12
-# 4  6 11 13
-tree = Tree()
-tree.insert(10)
-tree.insert(5)
-tree.insert(4)
-tree.insert(12)
-tree.insert(11)
-tree.insert(13)
-tree.insert(6)
-print(tree.DFS_InOrder())
+g = Graph()
+g.insert(1, 2)
+g.insert(1, 3)
+g.insert(2, 4)
+g.insert(2, 5)
+g.insert(3, 6)
+g.dfs(1)
 
   `;
   const kanpsack = `
@@ -267,6 +234,166 @@ G = [[1,1,0,1],
 graphColor(0)
 print(x)`;
 
+  const aStart = `
+import numpy as np
+import time
+
+def best_solution(state):
+    return np.array([s['puzzle'] for s in state]).reshape(-1, 3, 3)
+
+def misplaced_tiles(puzzle, goal):
+    return np.sum(puzzle != goal) - 1
+
+def coordinates(puzzle):
+    pos = np.array(range(9))
+    for p, q in enumerate(puzzle): pos[q] = p
+    return pos
+
+def evaluate_misplaced(puzzle, goal):
+    steps = [('up', [0, 1, 2], -3), ('down', [6, 7, 8], 3), ('left', [0, 3, 6], -1), ('right', [2, 5, 8], 1)]
+    dt_state, dt_priority = [('puzzle', list), ('parent', int), ('gn', int), ('hn', int)], [('position', int), ('fn', int)]
+    cost_g, parent, gn, hn = coordinates(goal), -1, 0, misplaced_tiles(coordinates(puzzle), coordinates(goal))
+    state, priority = np.array([(puzzle, parent, gn, hn)], dt_state), np.array([(0, hn)], dt_priority)
+
+    while True:
+        priority = np.sort(priority, kind='mergesort', order=['fn', 'position'])
+        position, fn = priority[0]
+        priority = np.delete(priority, 0, 0)
+        puzzle, parent, gn, hn = state[position]
+        puzzle = np.array(puzzle)
+        blank = int(np.where(puzzle == 0)[0])
+        gn += 1
+        c, start_time = 1, time.time()
+
+        for move, positions, head in steps:
+            c += 1
+            if blank not in positions:
+                open_states = puzzle.copy()
+                open_states[blank], open_states[blank + head] = open_states[blank + head], open_states[blank]
+
+                if not (np.all(list(state['puzzle']) == open_states, 1)).any():
+                    end_time = time.time()
+                    if end_time - start_time > 2: print("The 8 puzzle is unsolvable\n"); break
+                    hn = misplaced_tiles(coordinates(open_states), cost_g)
+                    q = np.array([(open_states, position, gn, hn)], dt_state)
+                    state = np.append(state, q, 0)
+                    fn = gn + hn
+                    q = np.array([(len(state) - 1, fn)], dt_priority)
+                    priority = np.append(priority, q, 0)
+                    if np.array_equal(open_states, goal): print('The 8 puzzle is solvable\n'); return state, len(priority)
+
+    return state, len(priority)
+
+puzzle, goal = [2, 8, 3, 1, 6, 4, 7, 0, 5], [1, 2, 3, 8, 0, 4, 7, 6, 5]
+state, visited = evaluate_misplaced(puzzle, goal)
+best_path = best_solution(state)
+print(str(best_path).replace('[', ' ').replace(']', ''))
+total_moves, visited_nodes = len(best_path) - 1, len(state) - visited
+print('\nSteps to reach goal:', total_moves, '\nTotal nodes visited:', visited_nodes)
+`;
+
+  const twoPlayer = `
+def print_board(board):
+    for row in board:
+        print(" | ".join(row))
+        print("-" * 9)
+
+
+def check_win(board, player):
+    for row in board:
+        if all(cell == player for cell in row):
+            return True
+    for col in range(3):
+        if all(board[row][col] == player for row in range(3)):
+            return True
+    if all(board[i][i] == player for i in range(3)) or all(board[i][2 - i] == player for i in range(3)):
+        return True
+    return False
+
+
+def is_full(board):
+    for row in board:
+        if " " in row:
+            return False
+    return True
+
+
+def play_game():
+    board = [[" " for _ in range(3)] for _ in range(3)]
+    player_turn = "X"
+
+    while True:
+        print_board(board)
+        while True:
+            try:
+                row = int(
+                    input(f"Enter row (1, 2, or 3) for {player_turn}: ")) - 1
+                col = int(
+                    input(f"Enter column (1, 2, or 3) for {player_turn}: ")) - 1
+                if 0 <= row < 3 and 0 <= col < 3 and board[row][col] == " ":
+                    break
+                else:
+                    print("Invalid input. Try again.")
+            except ValueError:
+                print("Invalid input. Enter numbers.")
+
+        board[row][col] = player_turn
+
+        if check_win(board, player_turn):
+            print_board(board)
+            print(f"{player_turn} wins!")
+            break
+        elif is_full(board):
+            print_board(board)
+            print("It's a draw!")
+            break
+
+        player_turn = "X" if player_turn == "O" else "O"
+
+
+play_game()
+
+`;
+
+  const singlePLayer = `
+import random
+
+def print_board(board):
+    [print(" | ".join(row), "\n" + "-" * 5) for row in board]
+
+def is_winner(board, player):
+    return any(all(cell == player for cell in row) for row in board) or \
+           any(all(board[row][col] == player for row in range(3)) for col in range(3)) or \
+           all(board[i][i] == player for i in range(3)) or \
+           all(board[i][2 - i] == player for i in range(3))
+
+def is_full(board):
+    return all(cell != " " for row in board for cell in row)
+
+def get_random_move(board):
+    return random.choice([(i, j) for i in range(3) for j in range(3) if board[i][j] == " "]) if any(" " in row for row in board) else None
+
+def main():
+    board, player_turn = [[" "]*3 for _ in range(3)], True
+    while True:
+        print_board(board)
+
+        if player_turn:
+            row, col = map(int, input("Enter row and column (comma-separated): ").split(','))
+            if board[row][col] == " ": board[row][col], player_turn = "X", False
+            else: print("Cell already occupied. Try again.")
+        else:
+            print("AI is making a random move...")
+            if (move := get_random_move(board)): board[move[0]][move[1]], player_turn = "O", True
+
+        if is_winner(board, "X"): print_board(board), print("Congratulations! You win!"); break
+        elif is_winner(board, "O"): print_board(board), print("AI wins! Better luck next time."); break
+        elif is_full(board): print_board(board), print("It's a tie!"); break
+
+if __name__ == "__main__":
+    main()
+
+`;
   const matLab = `image = imread("Tufaha.jpg");
 
     %Basic Use Case Question
@@ -444,9 +571,9 @@ print(x)`;
     end
     `;
 
-  useEffect(() => {
-    copyCodeToClipboard(matLab);
-  }, []);
+  //   useEffect(() => {
+  //     copyCodeToClipboard(matLab);
+  //   }, []);
   const copyCodeToClipboard = (code) => {
     navigator.clipboard
       .writeText(code)
@@ -460,7 +587,21 @@ print(x)`;
 
   return (
     <div className="App">
-      <button onClick={() => copyCodeToClipboard(matLab)}>MAT LAB</button>
+      <button onClick={() => copyCodeToClipboard(graphColoring)}>
+        Graph Coloring
+      </button>
+      <button onClick={() => copyCodeToClipboard(xor)}>Xor </button>
+      <button onClick={() => copyCodeToClipboard(kanpsack)}>Knapsack </button>
+      <button onClick={() => copyCodeToClipboard(dfs)}>DFS </button>
+      <button onClick={() => copyCodeToClipboard(water)}>Water</button>
+      <button onClick={() => copyCodeToClipboard(token)}>Token</button>
+      <button onClick={() => copyCodeToClipboard(aStart)}>A*</button>
+      <button onClick={() => copyCodeToClipboard(singlePLayer)}>
+        Single Player Game
+      </button>
+      <button onClick={() => copyCodeToClipboard(twoPlayer)}>
+        2 Player Tic Tac
+      </button>
     </div>
   );
 }
@@ -475,5 +616,6 @@ export default App;
       <button onClick={() => copyCodeToClipboard(dfs)}>DFS </button>
       <button onClick={() => copyCodeToClipboard(water)}>Water</button>
       <button onClick={() => copyCodeToClipboard(token)}>Token</button>
+      <button onClick={() => copyCodeToClipboard(matLab)}>MAT LAB</button>
       <button onClick={() => copyCodeToClipboard(matLab)}>MAT LAB</button> */
 }
